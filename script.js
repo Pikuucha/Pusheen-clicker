@@ -323,7 +323,7 @@ function mafiaArrive() {
   tryLevelUpByMafia();
 
   // ZMIANA: Poniżej znajduje się nowa, łatwiejsza formuła obliczania haraczu
-  const bribe = Math.floor(((currentPPS() * 30) + (currentPPC() * 8) + 50) * (1 + (playerLevel * 0.015)));
+  const bribe = Math.floor(((currentPPS() * 10) + (currentPPC() * 8) + 50) * (1 + (playerLevel * 0.015)));
 
   bribeAmountEl.textContent = bribe;
   mafiaGameOver.style.display = 'none';
@@ -405,7 +405,14 @@ function resetGame(){
 const eventsTimer = new PausableTimer();
 const activeEventTimers = {};
 
-function scheduleNextEvent(){ if(isGamePaused) return; const delay = randomInt(45,75); eventsTimer.start(delay*1000, ()=>{ if(!isGamePaused) triggerRandomEvent(); }); }
+function scheduleNextEvent() {
+  if (isGamePaused) return;
+  // ZMIANA: Czas pojawiania się eventów to teraz 1-50 sekund
+  const delay = randomInt(1, 50);
+  eventsTimer.start(delay * 1000, () => {
+    if (!isGamePaused) triggerRandomEvent();
+  });
+}
 function triggerRandomEvent(){ 
     if(isGamePaused || kornelChallengeActive) return;
     const activeKeys = Object.keys(state.activeEvents);

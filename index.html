@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pusheen Clicker 0.6 - Lottery & Sounds Update</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="level-display" id="levelDisplay">LVL: 1 <div class="golden-counter" id="goldenCounter" style="margin-left:12px"> <img src="https://i.postimg.cc/fLpnGgTL/Chat-GPT-Image-Aug-13-2025-03-12-55-PM.png" alt="Golden Bean"/> x <span id="goldenBeans">0</span></div></div>
+  <div id="heatOverlay"></div>
+  <div class="event-banners" id="eventBanners" aria-live="polite"></div>
+
+  <div class="wrap">
+    <div class="game" role="main">
+      <div class="header">
+        <h1>Pusheen Clicker</h1>
+        <div class="scoreboard" id="scoreboard">Score: <span id="playerScore">0</span></div>
+      </div>
+
+      <div class="zzz" id="zzz">Z.z.z.z...</div>
+      <div class="pusheen-target" id="pusheenTarget" title="Click me for Jelly Beans!">
+        <img id="pusheenImg" alt="Pusheen wearing sunglasses" src="https://i.postimg.cc/MKMFBXTh/Chat-GPT-Image-12-sie-2025-14-21-36.png" />
+        <div id="pusheenFallback" class="img-fallback" style="display:none">Pusheen</div>
+      </div>
+
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <div class="desc">Jelly Beans</div>
+          <div id="score"><b>Jelly Beans: 0</b></div>
+        </div>
+        <div class="stat">
+          <div class="desc">Beans per Click</div>
+          <div id="ppc"><b>Beans per Click: 1</b></div>
+        </div>
+        <div class="stat">
+          <div class="desc">Beans per Second</div>
+          <div id="pps"><b>Beans per Second: 0</b></div>
+        </div>
+      </div>
+
+      <div class="upgrades">
+        <div class="desc">Upgrades</div>
+
+        <div class="upgrade" id="up-floor" data-unlock="1">
+          <div class="upgrade-left">
+            <div><strong>Floor Beans</strong></div>
+            <div class="small">Pusheen finds some extra Jelly Beans on the floor. It's not much, but it's honest work. (+1 Beans per Second)</div>
+          </div>
+          <div>
+            <button class="buy" id="buyFloor">Buy Floor Beans (Cost: 10) - Lvl: 0</button>
+          </div>
+        </div>
+
+        <div class="upgrade" id="up-kiki" data-unlock="2">
+          <div class="upgrade-left">
+            <div><strong>Kiki Feeds Pusheen</strong></div>
+            <div class="small">Kiki helps out by feeding Pusheen. (+6 Beans per Second)</div>
+          </div>
+          <div>
+            <button class="buy" id="buyKiki">Buy Kiki (Cost: 130) - Lvl: 0</button>
+          </div>
+        </div>
+
+        <div class="upgrade" id="up-more" data-unlock="3">
+          <div class="upgrade-left">
+            <div><strong>More Jelly Beans</strong></div>
+            <div class="small">Better quality Jelly Beans make every click more rewarding. (+1 Beans per Click)</div>
+          </div>
+          <div>
+            <button class="buy" id="buyMore">Buy More Jelly Beans (Cost: 220) - Lvl: 0</button>
+          </div>
+        </div>
+
+        <div class="upgrade" id="up-pillow" data-unlock="4">
+          <div class="upgrade-left">
+            <div><strong>Comfy Pillow</strong></div>
+            <div class="small">A happy Pusheen on a comfy pillow gives more beans. (+5 Beans per Click)</div>
+          </div>
+          <div>
+            <button class="buy" id="buyPillow">Buy Comfy Pillow (Cost: 700) - Lvl: 0</button>
+          </div>
+        </div>
+
+        <div class="upgrade" id="up-snack" data-unlock="5">
+          <div class="upgrade-left">
+            <div><strong>The Ultimate Snack</strong></div>
+            <div class="small">Kiki discovers the ultimate snack for Pusheen, massively boosting automatic bean generation. (+100 Beans per Second). Additionally, provides a massive 5-second boost (x3 BPS) upon purchase!</div>
+          </div>
+          <div>
+            <button class="buy" id="buySnack">Buy Ultimate Snack (Cost: 1200) - Lvl: 0</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="lottery" id="lottery">
+        <h3>Golden Bean Lottery</h3>
+        <div class="spinner">
+          <div class="slot" id="slotLeft">🍬</div>
+          <div class="slot" id="slotMid">🍬</div>
+          <div class="slot" id="slotRight">🍬</div>
+        </div>
+        <div style="margin-top:10px"><button id="spinBtn" class="buy">Spin for 1 Golden Bean</button></div>
+      </div>
+
+      <footer>Tip: Click the Pusheen image to earn Jelly Beans. Random events may surprise you!</footer>
+    </div>
+  </div>
+
+  <div id="mafiaWarning"><strong>MAFIA ARRIVES IN:</strong> <span id="mafiaCountdown">6</span>s</div>
+
+  <div class="overlay" id="mafiaOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mafiaTitle">
+      <img id="mafiaBannerImg" class="mafia-banner-img" src="https://i.postimg.cc/RF1WtJGT/chatgpt-homiki.png" alt="Hamster Mafia Banner" />
+      <h2 id="mafiaTitle">The Hamster Mafia is here!</h2>
+      <p id="mafiaMessage">They demand a payment to leave you in peace.</p>
+      <div class="bribe">Bribe Required: <span id="bribeAmount">0</span> Jelly Beans</div>
+      <div>
+        <button class="btn-pay" id="payBribeBtn">Pay Bribe</button>
+        <button class="btn-play" id="playAgainBtn" style="display:none">Play Again</button>
+      </div>
+      <p id="mafiaGameOver" style="display:none;color:#b71c1c;font-weight:700;margin-top:8px">You couldn't pay! The hamsters took all your jelly beans and your Pusheen... GAME OVER.</p>
+    </div>
+  </div>
+
+  <div class="achv-btn" id="achvBtn" title="Achievements">
+    <img src="https://i.postimg.cc/bv04CN4m/Chat-GPT-Image-Aug-13-2025-03-23-39-PM.png" alt="Achievements" />
+  </div>
+  <div class="overlay" id="achvOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="achvTitle">
+      <h2 id="achvTitle">Achievements & Golden Beans</h2>
+      <div class="achv-list" id="achvList"></div>
+      <hr />
+      <div style="margin-top:8px">
+        <div style="font-weight:800">Exchange Golden Beans</div>
+        <div style="margin-top:6px">1 Golden Bean = 60s of your current Beans per Second.</div>
+        <div style="margin-top:8px"><button id="exchangeOne" class="buy">Exchange 1 GB</button> <button id="exchangeAll" class="buy">Exchange All</button></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn-play" id="closeAchv">Close</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="gameOverOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+      <img id="gameOverBannerImg" class="gameover-banner" src="" alt="Game Over Banner" />
+      <h2 id="gameOverTitle">Pusheen ran away from home in search of water... GAME OVER</h2>
+      <p>Keep an eye on the water bowl. Refill to survive!</p>
+      <p id="finalScore" style="font-weight:800;margin-top:8px">Final Score: 0</p>
+      <div>
+        <button class="btn-play" id="gameOverPlayBtn">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hydration" id="hydrationUI" aria-hidden="false">
+    <img id="waterBowl" alt="Water Bowl" src="https://i.postimg.cc/DwvGF6vP/Chat-GPT-Image-Aug-12.png" />
+    <div class="water-bar" id="waterBar">
+      <div class="water-fill" id="waterFill" style="height:100%"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

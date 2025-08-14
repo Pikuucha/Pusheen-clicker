@@ -313,25 +313,29 @@ function clearMafiaTimers(){
     mafiaWarningEl.style.display = 'none';
 }
 
-function mafiaArrive(){ 
+function mafiaArrive() {
   clearMafiaTimers();
   isGamePaused = true;
-  pauseAllTimers(); updateDisplay(); playBeep(200,0.35,'sawtooth');
+  pauseAllTimers();
+  updateDisplay();
+  playBeep(200, 0.35, 'sawtooth');
   mafiaHasArrived = true;
   tryLevelUpByMafia();
 
-  const bribe = Math.floor(((currentPPS() * 70) + (currentPPC() * 15) + 100) * (1 + (playerLevel * 0.02)));
-  bribeAmountEl.textContent = bribe; 
-  mafiaGameOver.style.display = 'none'; 
-  playAgainBtn.style.display = 'none'; 
+  // ZMIANA: Poniżej znajduje się nowa, łatwiejsza formuła obliczania haraczu
+  const bribe = Math.floor(((currentPPS() * 55) + (currentPPC() * 12) + 80) * (1 + (playerLevel * 0.015)));
+
+  bribeAmountEl.textContent = bribe;
+  mafiaGameOver.style.display = 'none';
+  playAgainBtn.style.display = 'none';
   payBribeBtn.style.display = 'inline-block';
   payBribeBtn.disabled = state.score < bribe;
 
-  mafiaOverlay.style.display = 'flex'; 
-  
-  if(state.score < bribe) {
-      mafiaGameOver.style.display = 'block';
-      playAgainBtn.style.display = 'inline-block';
+  mafiaOverlay.style.display = 'flex';
+
+  if (state.score < bribe) {
+    mafiaGameOver.style.display = 'block';
+    playAgainBtn.style.display = 'inline-block';
   }
 }
 

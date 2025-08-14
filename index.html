@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pusheen Clicker 0.6 - Lottery & Sounds Update</title>
+  <title>Pusheen Clicker 0.7 - Kornel's Challenge</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -91,9 +91,22 @@
             <button class="buy" id="buySnack">Buy Ultimate Snack (Cost: 1200) - Lvl: 0</button>
           </div>
         </div>
-
       </div>
 
+      <div id="kornelChallenge" style="display: none; text-align: center;">
+        <img id="kornelBanner" src="https://i.postimg.cc/Fzdkkwc0/20250814-1658-Magical-Jelly-Bean-Machine.png" alt="Kornel's Magical Machine" style="width: 100%; max-width: 400px; border-radius: 12px; margin-bottom: 12px;">
+        <h2>Wyzwanie Kornela!</h2>
+        <p>Kornel Kolekcjoner wymaga Twojej pomocy! Udoskonal te żelki, nadając im idealne wibracje. Klikaj w Pusheena najszybciej jak potrafisz!</p>
+        
+        <div style="margin: 16px 0;">
+          <div style="font-size: 14px; color: #666;">WYMAGANE KLIKNIĘCIA</div>
+          <div id="kornelClickTarget" style="font-size: 52px; font-weight: 900; line-height: 1.1;">0</div>
+        </div>
+
+        <progress id="kornelProgressBar" value="0" max="100" style="width: 100%; height: 24px;"></progress>
+        
+        <div style="margin-top: 12px; font-weight: 700;">Czas: <span id="kornelTimer">0</span>s</div>
+      </div>
       <div class="lottery" id="lottery">
         <h3>Golden Bean Lottery</h3>
         <div class="spinner">

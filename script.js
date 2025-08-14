@@ -189,12 +189,51 @@ function isUnlocked(upgradeId){ const el = document.getElementById(upgradeId); i
 
 function addXP(amount){ if(amount <= 0) return; playerXP += amount; if(!mafiaHasArrived) { updateDisplay(); return; } checkLevelUp(); updateDisplay(); }
 
-function grantLevelUp(){ if(playerLevel >= 10) return; playerLevel += 1; const bonus = playerLevel * 500; state.score += bonus; totalBeansEarned += bonus; playLevelUpSound(); mafiaArrivalsSinceLevelUp = 0; renderAchievementsList(); updateDisplay(); }
-
+function grantLevelUp() {
+  if (playerLevel >= 10) return;
+  playerLevel += 1;
+  // ZMIANA: Bonus za awans został zmniejszony o 50%
+  const bonus = playerLevel * 250;
+  state.score += bonus;
+  totalBeansEarned += bonus;
+  playLevelUpSound();
+  mafiaArrivalsSinceLevelUp = 0;
+  renderAchievementsList();
+  updateDisplay();
+}
 function checkLevelUp(){ let leveled = false; while(playerLevel < 10 && playerXP >= levelThresholds[playerLevel]){ playerLevel += 1; leveled = true; const bonus = playerLevel * 500; state.score += bonus; totalBeansEarned += bonus; playLevelUpSound(); } if(leveled) renderAchievementsList(); updateDisplay(); }
 
-function tryLevelUpByMafia(){ mafiaArrivalTotal += 1; mafiaArrivalsSinceLevelUp += 1; if(playerLevel < 4){ grantLevelUp(); return; } if(playerLevel === 4){ if(mafiaArrivalsSinceLevelUp >= 2 || playerXP >= levelThresholds[playerLevel]){ grantLevelUp(); return; } } if(playerLevel >=5){ if(mafiaArrivalsSinceLevelUp >= 3 || playerXP >= levelThresholds[playerLevel]){ grantLevelUp(); return; } } }
+function tryLevelUpByMafia() {
+  mafiaArrivalTotal += 1;
+  mafiaArrivalsSinceLevelUp += 1;
 
+  let shouldLevelUp = false;
+
+  if (playerLevel < 4) {
+    shouldLevelUp = true;
+  } else if (playerLevel === 4) {
+    if (mafiaArrivalsSinceLevelUp >= 2 || playerXP >= levelThresholds[playerLevel]) {
+      shouldLevelUp = true;
+    }
+  } else if (playerLevel >= 5) {
+    if (mafiaArrivalsSinceLevelUp >= 3 || playerXP >= levelThresholds[playerLevel]) {
+      shouldLevelUp = true;
+    }
+  }
+
+  // ZMIANA: Dodano opóźnienie i baner informacyjny
+  if (shouldLevelUp) {
+    // Pokaż graczowi informację, że zaraz awansuje
+    showTempBanner(`LEVEL UP IMMINENT! Preparing bonus...`);
+    
+    const delay = randomInt(2000, 10000); // Losowe opóźnienie od 2 do 10 sekund
+    
+    setTimeout(() => {
+      grantLevelUp();
+      showTempBanner(`Congratulations! You are now LVL: ${playerLevel}!`);
+    }, delay);
+  }
+}
 function randomizeAccentColor(){ const h = randomInt(0,360); document.documentElement.style.setProperty('--accent', `hsl(${h}deg 80% 55%)`); }
 
 function checkAchievements(){ achievements.forEach(a => { if(a.claimed) return; let progress = 0; if(a.type === 'clicks') progress = totalClicks; if(a.type === 'beans') progress = totalBeansEarned; if(a.type === 'mafia') progress = mafiaSurvivedCount; if(a.type === 'refill') progress = waterRefillCount; if(a.type === 'level') progress = playerLevel; if(a.type === 'ppc') progress = currentPPC(); if(a.type === 'gold') progress = goldenCaughtCount; if(progress >= a.target){ a.completed = true; } }); renderAchievementsList(); updateScoreboard(); }

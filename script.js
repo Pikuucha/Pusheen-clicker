@@ -323,7 +323,7 @@ function mafiaArrive() {
   tryLevelUpByMafia();
 
   // ZMIANA: Poniżej znajduje się nowa, łatwiejsza formuła obliczania haraczu
-  const bribe = Math.floor(((currentPPS() * 55) + (currentPPC() * 12) + 80) * (1 + (playerLevel * 0.015)));
+  const bribe = Math.floor(((currentPPS() * 30) + (currentPPC() * 8) + 50) * (1 + (playerLevel * 0.015)));
 
   bribeAmountEl.textContent = bribe;
   mafiaGameOver.style.display = 'none';

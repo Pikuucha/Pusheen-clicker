@@ -12,6 +12,9 @@ const GAME_OVER_BANNER_URL = 'https://i.postimg.cc/RZLCJg8W/Chat-GPT-Image-Aug-1
 // --- Global pause flag ---
 let isGamePaused = false;
 let kornelChallengeActive = false;
+let isMarketBlocked = false;
+let salePurchasesLeft = 0;
+let ppcBuffMultiplier = 1; // Mnożnik dla Beans per Click (dla "Super-Pazura")
 
 // --- Player & progression state ---
 let playerScore = 0;
@@ -555,121 +558,207 @@ closeAchvBtn.addEventListener('click', ()=>{ achvOverlay.style.display='none'; i
 exchangeOneBtn.addEventListener('click', ()=>{ if(goldenBeans <= 0) return; goldenBeans -= 1; const beansValue = Math.floor(currentPPS() * 60); addJellyBeans(beansValue); updateScoreboard(); });
 exchangeAllBtn.addEventListener('click', ()=>{ if(goldenBeans <= 0) return; const count = goldenBeans; goldenBeans = 0; const beansValue = Math.floor(currentPPS() * 60 * count); addJellyBeans(beansValue); updateScoreboard(); });
 
-// NOWA, ZBALANSOWANA LISTA NAGRÓD
+// NOWA, ZBALANSOWANA PULA NAGRÓD W RULETCE
 const lotteryCategories = [
   // POZYTYWNE (razem 50%)
-  { prize: 'common',   weight: 18, emoji: '🍬' }, // Mała paczka żelków
-  { prize: 'medium',   weight: 12, emoji: '🍪' }, // Średnia paczka żelków
-  { prize: 'water',    weight: 8,  emoji: '💧' }, // Bonus do wody
-  { prize: 'buff',     weight: 10, emoji: '🚀' }, // Darmowy buff
-  { prize: 'jackpot',  weight: 2,  emoji: '🌟' }, // JACKPOT
-  
+  { prize: 'jackpot',     text: 'JACKPOT! +5 Golden Beans',         type: 'jackpot',   weight: 2 },
+  { prize: 'sale',        text: 'SALE! -50% on next 3 upgrades',    type: 'positive',  weight: 5 },
+  { prize: 'superClaw',   text: 'Super-Claw! x3 BPC for 10s',       type: 'positive',  weight: 8 },
+  { prize: 'waterBonus',  text: 'Water Bonus! Full & immune for 20s', type: 'positive',  weight: 8 },
+  { prize: 'snackBuff',   text: 'Free Snack Buff! x3 BPS for 5s',     type: 'positive',  weight: 7 },
+  { prize: 'mediumBeans', text: 'Medium Jelly Bean Pack',           type: 'positive',  weight: 10 },
+  { prize: 'smallBeans',  text: 'Small Jelly Bean Pack',            type: 'positive',  weight: 10 },
+
   // NEUTRALNY (10%)
-  { prize: 'nothing',  weight: 10, emoji: '❔' }, // Nic się nie dzieje
-  
+  { prize: 'nothing',     text: 'Nothing...',                       type: 'neutral',   weight: 10 },
+
   // NEGATYWNE (razem 40%)
-  { prize: 'loseBeans', weight: 8, emoji: '💀' },  // Utrata wszystkich żelków
-  { prize: 'loseWater', weight: 12, emoji: '🚱' }, // Utrata 50% wody
-  { prize: 'marketBlock', weight: 10, emoji: '⛔️' },// Blokada ulepszeń
-  { prize: 'mafia', weight: 10, emoji: '🐹' }  // Natychmiastowa mafia
+  { prize: 'mafia',       text: 'Oh no! The Mafia arrives now!',    type: 'negative',  weight: 10 },
+  { prize: 'loseWater',   text: 'Drought! Lose 50% of your water',  type: 'negative',  weight: 8 },
+  { prize: 'marketBlock', text: 'Market Block! No upgrades for 15s',type: 'negative',  weight: 10 },
+  { prize: 'lazyDay',     text: 'Lazy Day! BPS halved for 30s',     type: 'negative',  weight: 7 },
+  { prize: 'softPaws',    text: 'Soft Paws! BPC set to 1 for 10s',   type: 'negative',  weight: 5 }
 ];
-// NOWA, POPRAWIONA WERSJA LOGIKI RULETKI
-spinBtn.addEventListener('click', () => {
-  if (goldenBeans <= 0 || isGamePaused) return;
-  goldenBeans -= 1;
-  updateScoreboard();
-  spinBtn.disabled = true;
 
-  let ticks = 24;
-  const symbols = lotteryCategories.map(c => c.emoji);
+// NOWA FUNKCJA POMOCNICZA DLA UNOSZĄCEGO SIĘ TEKSTU
+function showFloatingText(text, element) {
+    const container = document.getElementById('floatingTextContainer');
+    if (!container) return;
 
-  const spinInterval = setInterval(() => {
-    slotLeft.textContent = symbols[randomInt(0, symbols.length - 1)];
-    slotMid.textContent = symbols[randomInt(0, symbols.length - 1)];
-    slotRight.textContent = symbols[randomInt(0, symbols.length - 1)];
-    ticks--;
+    const textEl = document.createElement('span');
+    textEl.className = 'floating-text';
+    textEl.textContent = text;
+    
+    container.appendChild(textEl);
 
-    if (ticks <= 0) {
-      clearInterval(spinInterval);
+    setTimeout(() => {
+        textEl.remove();
+    }, 2000); // Czas życia tekstu (2 sekundy)
+}
+// ZMIANA: Uwzględnia teraz mnożnik dla BPC (Super-Pazur / Miękkie Poduszeczki)
+function currentPPC() {
+  const base = state.basePPC + (state.moreLevel * 1) + (state.pillowLevel * 5);
+  if (ppcBuffMultiplier !== 1 && state.activeEvents['softPaws']) {
+      return 1; // Jeśli działają "Miękkie Poduszeczki", BPC to zawsze 1
+  }
+  return base * ppcBuffMultiplier;
+}
 
-      // KROK 1: Losujemy jeden, konkretny wynik
-      const finalResult = weightedRandom(lotteryCategories);
+// ZMIANA: Uwzględnia teraz efekt "Leniwego Dnia"
+function currentPPS() {
+  const base = (state.floorLevel * 1) + (state.kikiLevel * 6) + (state.snackLevel * 100);
+  return Math.floor(base * state.bpsBuffMultiplier);
+}
 
-      // KROK 2: Pokazujemy wynik
-      if (finalResult.prize === 'nothing') {
-        // Jeśli nic, pokazujemy losowe, niepasujące symbole
-        slotLeft.textContent = '🍬';
-        slotMid.textContent = '💧';
-        slotRight.textContent = '🐹';
-      } else {
-        // Jeśli jest nagroda, pokazujemy 3 pasujące symbole
-        slotLeft.textContent = finalResult.emoji;
-        slotMid.textContent = finalResult.emoji;
-        slotRight.textContent = finalResult.emoji;
-      }
+// ZMIANA: Uwzględnia teraz "Wyprzedaż"
+function scaledCost(base, level, isClickUpgrade, key) {
+  let mult = isClickUpgrade ? state.clickCostMultiplier : state.autoCostMultiplier;
+  if (key === 'snack') mult = 1.35;
+  let finalCost = Math.ceil(base * Math.pow(mult, level));
+  
+  // Aplikuje zniżkę, jeśli jest aktywna
+  if (salePurchasesLeft > 0) {
+    finalCost = Math.ceil(finalCost * 0.5);
+  }
+  
+  return finalCost;
+}
+// NOWA, KOMPLETNA LOGIKA RULETKI I NAGRÓD
+const lotteryButton = document.getElementById('lotteryButton');
+const lotteryDisplay = document.getElementById('lotteryDisplay');
+let isSpinning = false;
+let finalPrize = null;
 
-      // KROK 3: Uruchamiamy funkcję z nagrodą/karą
-      handleLotteryWin(finalResult.prize);
+lotteryButton.addEventListener('click', () => {
+    // Pierwsze kliknięcie - START
+    if (!isSpinning) {
+        if (goldenBeans <= 0 || isGamePaused) return;
+        
+        goldenBeans -= 1;
+        updateScoreboard();
+        
+        isSpinning = true;
+        lotteryButton.src = 'https://i.postimg.cc/L8r93yTM/loteria-wlaczona.png'; // Zmień obrazek na "włączony"
+        lotteryButton.classList.add('disabled'); // Zablokuj na chwilę, by uniknąć podwójnych kliknięć
 
-      spinBtn.disabled = false;
+        // KROK 1: Losujemy wynik na samym początku
+        finalPrize = weightedRandom(lotteryCategories);
+        
+        // KROK 2: Uruchamiamy animację "tasowania" tekstu
+        let shuffleInterval = setInterval(() => {
+            const randomPrize = lotteryCategories[randomInt(0, lotteryCategories.length - 1)];
+            lotteryDisplay.textContent = randomPrize.text;
+            lotteryDisplay.className = 'neutral'; // Tekst jest szary w trakcie losowania
+        }, 50); // Czas zmiany tekstu (50ms = 20 razy na sekundę)
+
+        // KROK 3: Po krótkiej chwili odblokuj przycisk, by można go było "zatrzymać"
+        setTimeout(() => {
+            lotteryButton.classList.remove('disabled');
+        }, 500);
+
+        // Zapisujemy interwał i nagrodę, by mieć do nich dostęp
+        lotteryButton.dataset.intervalId = shuffleInterval;
+        
+    // Drugie kliknięcie - STOP
+    } else {
+        isSpinning = false;
+        lotteryButton.classList.add('disabled'); // Zablokuj przycisk na stałe na czas pokazywania wyniku
+        
+        const shuffleInterval = lotteryButton.dataset.intervalId;
+        clearInterval(shuffleInterval);
+
+        // KROK 4: Animacja zwalniania i pokazanie wyniku
+        setTimeout(() => { lotteryDisplay.textContent = lotteryCategories[randomInt(0, lotteryCategories.length - 1)].text; }, 150);
+        setTimeout(() => { lotteryDisplay.textContent = lotteryCategories[randomInt(0, lotteryCategories.length - 1)].text; }, 350);
+        setTimeout(() => {
+            if (finalPrize.prize === 'nothing') {
+                lotteryDisplay.textContent = 'Nothing...';
+                lotteryDisplay.className = 'neutral';
+            } else {
+                lotteryDisplay.textContent = finalPrize.text;
+                lotteryDisplay.className = finalPrize.type; // Ustawia kolor (positive, negative, jackpot)
+            }
+            
+            // KROK 5: Uruchom logikę nagrody/kary
+            handleLotteryWin(finalPrize.prize);
+            
+            lotteryButton.src = 'https://i.postimg.cc/brQkqDwZ/loteria-wylaczona.png'; // Wróć do obrazka "wyłączony"
+            
+            // Odblokuj przycisk po chwili, by można było zagrać ponownie
+            setTimeout(() => { lotteryButton.classList.remove('disabled'); }, 1000);
+
+        }, 600);
     }
-  }, 80);
 });
 
-// NOWA, ROZBUDOWANA WERSJA FUNKCJI Z NAGRODAMI
+
 function handleLotteryWin(prize) {
+  let val;
   switch (prize) {
-    case 'common':
-      const valCommon = Math.floor(currentPPS() * 30 + 50);
-      addJellyBeans(valCommon);
-      showTempBanner(`You won ${valCommon} Jelly Beans!`);
+    case 'smallBeans':
+      val = Math.floor(currentPPS() * 15 + 25);
+      addJellyBeans(val);
+      showFloatingText(`+${val}`, scoreEl);
       break;
-    case 'medium':
-      const valMedium = Math.floor(currentPPS() * 90 + 150);
-      addJellyBeans(valMedium);
-      showTempBanner(`You won ${valMedium} Jelly Beans!`);
+    case 'mediumBeans':
+      val = Math.floor(currentPPS() * 35 + 75);
+      addJellyBeans(val);
+      showFloatingText(`+${val}`, scoreEl);
       break;
-    case 'water':
+    case 'waterBonus':
       waterLevel = 100;
       if (waterInvulTimeout) clearTimeout(waterInvulTimeout);
       waterNextTimer.clear();
       waterInvulTimeout = setTimeout(() => { waterInvulTimeout = null; restartWaterInterval(); }, 20000);
-      showTempBanner('Water bowl refilled & invulnerable for 20s!');
       break;
-    case 'buff':
+    case 'snackBuff':
       triggerUltimateSnackBuff();
-      showTempBanner('You won a free Ultimate Snack boost!');
       break;
     case 'jackpot':
       goldenBeans += 5;
-      showTempBanner('JACKPOT! +5 Golden Beans!');
       break;
     case 'nothing':
-      showTempBanner('Nothing happened... Better luck next time.');
+      // Nic się nie dzieje
       break;
     case 'loseBeans':
       state.score = 0;
-      showTempBanner('Oh no! You lost all your beans!');
       break;
     case 'loseWater':
       waterLevel = Math.max(0, waterLevel - 50);
-      showTempBanner('Bad luck! Your water bowl lost 50 points!');
       break;
     case 'marketBlock':
       isMarketBlocked = true;
       showTempBanner('Market blocked! You cannot buy upgrades for 15s.');
-      setTimeout(() => {
-        isMarketBlocked = false;
-        showTempBanner('The market is open again!');
-      }, 15000); // 15 sekund, tak jak prosiłeś
+      setTimeout(() => { isMarketBlocked = false; showTempBanner('The market is open again!'); }, 15000);
       break;
     case 'mafia':
-      showTempBanner('Terrible luck! The Mafia arrives instantly!');
       mafiaArrive();
+      break;
+    case 'sale':
+      salePurchasesLeft = 3;
+      showTempBanner('SALE! Your next 3 upgrades are 50% off!');
+      break;
+    case 'superClaw':
+      ppcBuffMultiplier = 3;
+      state.activeEvents['superClaw'] = true;
+      showTempBanner('Super-Claw! x3 BPC for 10s!');
+      setTimeout(() => { ppcBuffMultiplier = 1; delete state.activeEvents['superClaw']; }, 10000);
+      break;
+    case 'lazyDay':
+      state.bpsBuffMultiplier = 0.5;
+      state.activeEvents['lazyDay'] = true;
+      showTempBanner('Lazy Day! BPS halved for 30s.');
+      setTimeout(() => { state.bpsBuffMultiplier = 1; delete state.activeEvents['lazyDay']; }, 30000);
+      break;
+    case 'softPaws':
+      state.activeEvents['softPaws'] = true;
+      showTempBanner('Soft Paws! BPC set to 1 for 10s.');
+      setTimeout(() => { delete state.activeEvents['softPaws']; }, 10000);
       break;
   }
   updateDisplay();
 }
+
 
 function showTempBanner(text){ const b = document.createElement('div'); b.className='event-banner'; b.textContent = text; eventBanners.appendChild(b); setTimeout(()=>{ b.remove(); },4000); }
 

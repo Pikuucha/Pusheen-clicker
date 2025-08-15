@@ -101,10 +101,102 @@ footer{margin-top:12px;font-size:12px;color:var(--muted)}
 .claim-btn{background:#ffd166;border-radius:8px;padding:8px 10px;border:0;font-weight:700;cursor:pointer}
 .claim-btn.claimed{background:#bdbdbd;color:#fff;cursor:default}
 
-/* Lottery */
-.lottery{margin-top:18px;padding:12px;border-radius:12px;background:#fbfbff;border:1px solid rgba(0,0,0,0.04)}
-.spinner{height:56px;display:flex;align-items:center;justify-content:center;gap:18px}
-.spinner .slot{width:120px;height:48px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;font-weight:700}
+/* --- Styles for the New Lottery --- */
+#newLottery {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fbfbff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  text-align: center;
+}
+
+#lotteryDisplay {
+  min-height: 50px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  color: #333; /* Default text color */
+}
+
+/* Text colors depending on the prize */
+#lotteryDisplay.positive { color: #27ae60; border-color: #2ecc71; }
+#lotteryDisplay.neutral { color: #555; border-color: #95a5a6; }
+#lotteryDisplay.negative { color: #c0392b; border-color: #e74c3c; }
+#lotteryDisplay.jackpot {
+  color: transparent;
+  border-color: #f1c40f;
+  background: linear-gradient(90deg, #f1c40f, #f39c12, #e67e22, #f1c40f);
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: jackpot-shine 2s linear infinite;
+}
+
+@keyframes jackpot-shine {
+  to { background-position: -200% center; }
+}
+
+#lotteryButtonWrapper {
+  margin-top: 12px;
+}
+
+#lotteryButton {
+  width: 200px;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.2s;
+}
+
+#lotteryButton:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+#lotteryButton.disabled {
+  cursor: not-allowed;
+  filter: grayscale(80%);
+  pointer-events: none;
+}
+
+/* --- Styles for the Floating Text (+3440) --- */
+#floatingTextContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.floating-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  font-size: 20px;
+  color: #27ae60;
+  text-shadow: 1px 1px 2px #fff;
+  animation: float-up-and-fade 2s ease-out forwards;
+}
+
+@keyframes float-up-and-fade {
+  from {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -150%);
+    opacity: 0;
+  }
+}
 
 /* Game over overlay */
 #gameOverOverlay .modal{max-width:520px}

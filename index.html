@@ -27,8 +27,11 @@
       <div class="stats" aria-live="polite">
         <div class="stat">
           <div class="desc">Jelly Beans</div>
-          <div id="score"><b>Jelly Beans: 0</b></div>
-        </div>
+          <div id="score" style="position: relative;">
+  <b>Jelly Beans: 0</b>
+  <div id="floatingTextContainer"></div>
+</div>
+      
         <div class="stat">
           <div class="desc">Beans per Click</div>
           <div id="ppc"><b>Beans per Click: 1</b></div>
@@ -107,19 +110,14 @@
         
         <div style="margin-top: 12px; font-weight: 700;">Czas: <span id="kornelTimer">0</span>s</div>
       </div>
-      <div class="lottery" id="lottery">
-        <h3>Golden Bean Lottery</h3>
-        <div class="spinner">
-          <div class="slot" id="slotLeft">🍬</div>
-          <div class="slot" id="slotMid">🍬</div>
-          <div class="slot" id="slotRight">🍬</div>
+ <div id="newLottery">
+        <div id="lotteryDisplay" class="neutral">
+          Kliknij, aby zaryzykować!
         </div>
-        <div style="margin-top:10px"><button id="spinBtn" class="buy">Spin for 1 Golden Bean</button></div>
+        <div id="lotteryButtonWrapper">
+          <img src="https://i.postimg.cc/brQkqDwZ/loteria-wylaczona.png" id="lotteryButton" alt="Rozpocznij losowanie" title="Zakręć za 1 Złotego Żelka">
+        </div>
       </div>
-
-      <footer>Tip: Click the Pusheen image to earn Jelly Beans. Random events may surprise you!</footer>
-    </div>
-  </div>
 
   <div id="mafiaWarning"><strong>MAFIA ARRIVES IN:</strong> <span id="mafiaCountdown">6</span>s</div>
 

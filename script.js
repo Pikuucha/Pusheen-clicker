@@ -11,6 +11,7 @@ const GAME_OVER_BANNER_URL = 'https://i.postimg.cc/RZLCJg8W/Chat-GPT-Image-Aug-1
 
 // --- Global pause flag ---
 let isGamePaused = false;
+let kornelChallengeActive = false;
 
 // --- Player & progression state ---
 let playerScore = 0;
@@ -323,7 +324,7 @@ function mafiaArrive() {
   tryLevelUpByMafia();
 
   // ZMIANA: Poniżej znajduje się nowa, łatwiejsza formuła obliczania haraczu
-  const bribe = Math.floor(((currentPPS() * 5) + (currentPPC() * 8) + 50) * (1 + (playerLevel * 3)));
+  const bribe = Math.floor(((currentPPS() * 3) + (currentPPC() * 8) + 50) * (1 + (playerLevel * 0.025)));
 
   bribeAmountEl.textContent = bribe;
   mafiaGameOver.style.display = 'none';
@@ -554,44 +555,121 @@ closeAchvBtn.addEventListener('click', ()=>{ achvOverlay.style.display='none'; i
 exchangeOneBtn.addEventListener('click', ()=>{ if(goldenBeans <= 0) return; goldenBeans -= 1; const beansValue = Math.floor(currentPPS() * 60); addJellyBeans(beansValue); updateScoreboard(); });
 exchangeAllBtn.addEventListener('click', ()=>{ if(goldenBeans <= 0) return; const count = goldenBeans; goldenBeans = 0; const beansValue = Math.floor(currentPPS() * 60 * count); addJellyBeans(beansValue); updateScoreboard(); });
 
+// NOWA, ZBALANSOWANA LISTA NAGRÓD
 const lotteryCategories = [
-  { prize:'common', weight:55, emoji:'🍬' },
-  { prize:'medium', weight:20, emoji:'🍪' },
-  { prize:'water', weight:10, emoji:'💧' },
-  { prize:'buff', weight:8, emoji:'🚀' },
-  { prize:'jackpot', weight:2, emoji:'🌟' },
-  { prize:'negative', weight:5, emoji:'💀' }
+  // POZYTYWNE (razem 50%)
+  { prize: 'common',   weight: 18, emoji: '🍬' }, // Mała paczka żelków
+  { prize: 'medium',   weight: 12, emoji: '🍪' }, // Średnia paczka żelków
+  { prize: 'water',    weight: 8,  emoji: '💧' }, // Bonus do wody
+  { prize: 'buff',     weight: 10, emoji: '🚀' }, // Darmowy buff
+  { prize: 'jackpot',  weight: 2,  emoji: '🌟' }, // JACKPOT
+  
+  // NEUTRALNY (10%)
+  { prize: 'nothing',  weight: 10, emoji: '❔' }, // Nic się nie dzieje
+  
+  // NEGATYWNE (razem 40%)
+  { prize: 'loseBeans', weight: 8, emoji: '💀' },  // Utrata wszystkich żelków
+  { prize: 'loseWater', weight: 12, emoji: '🚱' }, // Utrata 50% wody
+  { prize: 'marketBlock', weight: 10, emoji: '⛔️' },// Blokada ulepszeń
+  { prize: 'mafia', weight: 10, emoji: '🐹' }  // Natychmiastowa mafia
 ];
+// NOWA, POPRAWIONA WERSJA LOGIKI RULETKI
+spinBtn.addEventListener('click', () => {
+  if (goldenBeans <= 0 || isGamePaused) return;
+  goldenBeans -= 1;
+  updateScoreboard();
+  spinBtn.disabled = true;
 
-function handleLotteryWin(prize){
-    if(prize === 'common'){ const val=Math.floor(currentPPS()*30); addJellyBeans(val); showTempBanner(`You won ${val} Jelly Beans!`); }
-    else if(prize === 'medium'){ const val=Math.floor(currentPPS()*90); addJellyBeans(val); showTempBanner(`You won ${val} Jelly Beans!`); }
-    else if(prize === 'water'){ waterLevel=100; if(waterInvulTimeout) clearTimeout(waterInvulTimeout); waterNextTimer.clear(); waterInvulTimeout=setTimeout(()=>{waterInvulTimeout=null; restartWaterInterval();}, 20000); showTempBanner('Water bowl refilled & invulnerable for 20s!'); }
-    else if(prize === 'buff'){ triggerUltimateSnackBuff(); }
-    else if(prize === 'jackpot'){ goldenBeans += 5; showTempBanner('JACKPOT! +5 Golden Beans!'); }
-    else if(prize === 'negative'){ state.score=0; showTempBanner('Oh no! You lost all your beans!'); }
-}
+  let ticks = 24;
+  const symbols = lotteryCategories.map(c => c.emoji);
 
-spinBtn.addEventListener('click', ()=>{
-  if(goldenBeans <= 0) return; goldenBeans -= 1; updateScoreboard(); spinBtn.disabled = true;
-  let ticks = 24; const symbols = lotteryCategories.map(c=>c.emoji);
-  const spinInterval = setInterval(()=>{ slotLeft.textContent = symbols[randomInt(0,symbols.length-1)]; slotMid.textContent = symbols[randomInt(0,symbols.length-1)]; slotRight.textContent = symbols[randomInt(0,symbols.length-1)]; ticks--; if(ticks<=0){ clearInterval(spinInterval);
-        const result1 = weightedRandom(lotteryCategories);
-        const result2 = weightedRandom(lotteryCategories);
-        const result3 = weightedRandom(lotteryCategories);
+  const spinInterval = setInterval(() => {
+    slotLeft.textContent = symbols[randomInt(0, symbols.length - 1)];
+    slotMid.textContent = symbols[randomInt(0, symbols.length - 1)];
+    slotRight.textContent = symbols[randomInt(0, symbols.length - 1)];
+    ticks--;
 
-        slotLeft.textContent = result1.emoji;
-        slotMid.textContent = result2.emoji;
-        slotRight.textContent = result3.emoji;
+    if (ticks <= 0) {
+      clearInterval(spinInterval);
 
-        if (result1.prize === result2.prize && result2.prize === result3.prize) {
-            handleLotteryWin(result1.prize);
-        } else {
-            showTempBanner('No match! Better luck next time.');
-        }
-        spinBtn.disabled = false;
-  } }, 80);
+      // KROK 1: Losujemy jeden, konkretny wynik
+      const finalResult = weightedRandom(lotteryCategories);
+
+      // KROK 2: Pokazujemy wynik
+      if (finalResult.prize === 'nothing') {
+        // Jeśli nic, pokazujemy losowe, niepasujące symbole
+        slotLeft.textContent = '🍬';
+        slotMid.textContent = '💧';
+        slotRight.textContent = '🐹';
+      } else {
+        // Jeśli jest nagroda, pokazujemy 3 pasujące symbole
+        slotLeft.textContent = finalResult.emoji;
+        slotMid.textContent = finalResult.emoji;
+        slotRight.textContent = finalResult.emoji;
+      }
+
+      // KROK 3: Uruchamiamy funkcję z nagrodą/karą
+      handleLotteryWin(finalResult.prize);
+
+      spinBtn.disabled = false;
+    }
+  }, 80);
 });
+
+// NOWA, ROZBUDOWANA WERSJA FUNKCJI Z NAGRODAMI
+function handleLotteryWin(prize) {
+  switch (prize) {
+    case 'common':
+      const valCommon = Math.floor(currentPPS() * 30 + 50);
+      addJellyBeans(valCommon);
+      showTempBanner(`You won ${valCommon} Jelly Beans!`);
+      break;
+    case 'medium':
+      const valMedium = Math.floor(currentPPS() * 90 + 150);
+      addJellyBeans(valMedium);
+      showTempBanner(`You won ${valMedium} Jelly Beans!`);
+      break;
+    case 'water':
+      waterLevel = 100;
+      if (waterInvulTimeout) clearTimeout(waterInvulTimeout);
+      waterNextTimer.clear();
+      waterInvulTimeout = setTimeout(() => { waterInvulTimeout = null; restartWaterInterval(); }, 20000);
+      showTempBanner('Water bowl refilled & invulnerable for 20s!');
+      break;
+    case 'buff':
+      triggerUltimateSnackBuff();
+      showTempBanner('You won a free Ultimate Snack boost!');
+      break;
+    case 'jackpot':
+      goldenBeans += 5;
+      showTempBanner('JACKPOT! +5 Golden Beans!');
+      break;
+    case 'nothing':
+      showTempBanner('Nothing happened... Better luck next time.');
+      break;
+    case 'loseBeans':
+      state.score = 0;
+      showTempBanner('Oh no! You lost all your beans!');
+      break;
+    case 'loseWater':
+      waterLevel = Math.max(0, waterLevel - 50);
+      showTempBanner('Bad luck! Your water bowl lost 50 points!');
+      break;
+    case 'marketBlock':
+      isMarketBlocked = true;
+      showTempBanner('Market blocked! You cannot buy upgrades for 15s.');
+      setTimeout(() => {
+        isMarketBlocked = false;
+        showTempBanner('The market is open again!');
+      }, 15000); // 15 sekund, tak jak prosiłeś
+      break;
+    case 'mafia':
+      showTempBanner('Terrible luck! The Mafia arrives instantly!');
+      mafiaArrive();
+      break;
+  }
+  updateDisplay();
+}
 
 function showTempBanner(text){ const b = document.createElement('div'); b.className='event-banner'; b.textContent = text; eventBanners.appendChild(b); setTimeout(()=>{ b.remove(); },4000); }
 

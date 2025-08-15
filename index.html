@@ -18,28 +18,26 @@
         <div class="scoreboard" id="scoreboard">Score: <span id="playerScore">0</span></div>
       </div>
 
-      <div class="zzz" id="zzz">Z.z.z.z...</div>
-      <div class="pusheen-target" id="pusheenTarget" title="Click me for Jelly Beans!">
-        <img id="pusheenImg" alt="Pusheen wearing sunglasses" src="https://i.postimg.cc/MKMFBXTh/Chat-GPT-Image-12-sie-2025-14-21-36.png" />
-        <div id="pusheenFallback" class="img-fallback" style="display:none">Pusheen</div>
+<div class="zzz" id="zzz">Z.z.z.z...</div>
+
+      <div id="mainDisplayContainer">
+        
+        <div class="pusheen-target" id="pusheenTarget" title="Click me for Jelly Beans!">
+          <img id="pusheenImg" alt="Pusheen wearing sunglasses" src="https://i.postimg.cc/MKMFBXTh/Chat-GPT-Image-12-sie-2025-14-21-36.png" />
+          <div id="pusheenFallback" class="img-fallback" style="display:none">Pusheen</div>
+        </div>
+
+        <div id="scoreWheelContainer">
+          <div id="jellyBeanCounter">0</div>
+          <div id="floatingTextContainer"></div>
+        </div>
+
       </div>
 
-      <div class="stats" aria-live="polite">
-        <div class="stat">
-          <div class="desc">Jelly Beans</div>
-          <div id="score" style="position: relative;">
-  <b>Jelly Beans: 0</b>
-  <div id="floatingTextContainer"></div>
-</div>
-      
-        <div class="stat">
-          <div class="desc">Beans per Click</div>
-          <div id="ppc"><b>Beans per Click: 1</b></div>
-        </div>
-        <div class="stat">
-          <div class="desc">Beans per Second</div>
-          <div id="pps"><b>Beans per Second: 0</b></div>
-        </div>
+      <div id="subStatsContainer">
+        <span id="bpcDisplay">BPC: 1</span>
+        <span>|</span>
+        <span id="bpsDisplay">BPS: 0</span>
       </div>
 
       <div class="upgrades">

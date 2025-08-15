@@ -3,6 +3,11 @@ html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Seg
 .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px}
 .game{width:920px;max-width:96%;background:var(--card);border-radius:16px;box-shadow:0 8px 30px rgba(45,55,80,0.08);padding:28px;text-align:center;position:relative}
 
+@font-face {
+  font-family: 'PusheenFont'; /* To jest Twoja własna nazwa, której będziemy używać w kodzie */
+  src: url('fonts/MojaCzcionka.woff2') format('woff2'); /* Ścieżka do Twojego pliku */
+}
+
 /* Header: title + scoreboard */
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 h1{margin:0;font-size:28px}

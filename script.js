@@ -628,46 +628,43 @@ const lotteryButton = document.getElementById('lotteryButton');
 const lotteryDisplay = document.getElementById('lotteryDisplay');
 let isSpinning = false;
 let finalPrize = null;
+let shuffleIntervalId = null;
 
 lotteryButton.addEventListener('click', () => {
     // Pierwsze kliknięcie - START
     if (!isSpinning) {
         if (goldenBeans <= 0 || isGamePaused) return;
-        
+
         goldenBeans -= 1;
         updateScoreboard();
-        
-        isSpinning = true;
-        lotteryButton.src = 'https://i.postimg.cc/L8r93yTM/loteria-wlaczona.png'; // Zmień obrazek na "włączony"
-        lotteryButton.classList.add('disabled'); // Zablokuj na chwilę, by uniknąć podwójnych kliknięć
 
-        // KROK 1: Losujemy wynik na samym początku
+        isSpinning = true;
+        lotteryButton.src = 'https://i.postimg.cc/L8r93yTM/loteria-wlaczona.png';
+        lotteryButton.classList.add('disabled');
+
+        // Losujemy wynik na samym początku
         finalPrize = weightedRandom(lotteryCategories);
-        
-        // KROK 2: Uruchamiamy animację "tasowania" tekstu
-        let shuffleInterval = setInterval(() => {
+
+        // Animacja tasowania
+        shuffleIntervalId = setInterval(() => {
             const randomPrize = lotteryCategories[randomInt(0, lotteryCategories.length - 1)];
             lotteryDisplay.textContent = randomPrize.text;
-            lotteryDisplay.className = 'neutral'; // Tekst jest szary w trakcie losowania
-        }, 50); // Czas zmiany tekstu (50ms = 20 razy na sekundę)
+            lotteryDisplay.className = 'neutral';
+        }, 50);
 
-        // KROK 3: Po krótkiej chwili odblokuj przycisk, by można go było "zatrzymać"
+        // Odblokuj przycisk, aby można było zatrzymać
         setTimeout(() => {
             lotteryButton.classList.remove('disabled');
         }, 500);
 
-        // Zapisujemy interwał i nagrodę, by mieć do nich dostęp
-        lotteryButton.dataset.intervalId = shuffleInterval;
-        
     // Drugie kliknięcie - STOP
     } else {
         isSpinning = false;
-        lotteryButton.classList.add('disabled'); // Zablokuj przycisk na stałe na czas pokazywania wyniku
-        
-        const shuffleInterval = lotteryButton.dataset.intervalId;
-        clearInterval(shuffleInterval);
+        lotteryButton.classList.add('disabled');
 
-        // KROK 4: Animacja zwalniania i pokazanie wyniku
+        clearInterval(shuffleIntervalId);
+
+        // Efekt zwalniania
         setTimeout(() => { lotteryDisplay.textContent = lotteryCategories[randomInt(0, lotteryCategories.length - 1)].text; }, 150);
         setTimeout(() => { lotteryDisplay.textContent = lotteryCategories[randomInt(0, lotteryCategories.length - 1)].text; }, 350);
         setTimeout(() => {
@@ -676,17 +673,18 @@ lotteryButton.addEventListener('click', () => {
                 lotteryDisplay.className = 'neutral';
             } else {
                 lotteryDisplay.textContent = finalPrize.text;
-                lotteryDisplay.className = finalPrize.type; // Ustawia kolor (positive, negative, jackpot)
+                lotteryDisplay.className = finalPrize.type;
             }
-            
-            // KROK 5: Uruchom logikę nagrody/kary
-            handleLotteryWin(finalPrize.prize);
-            
-            lotteryButton.src = 'https://i.postimg.cc/brQkqDwZ/loteria-wylaczona.png'; // Wróć do obrazka "wyłączony"
-            
-            // Odblokuj przycisk po chwili, by można było zagrać ponownie
-            setTimeout(() => { lotteryButton.classList.remove('disabled'); }, 1000);
 
+            // Logika nagrody/kary
+            handleLotteryWin(finalPrize.prize);
+
+            lotteryButton.src = 'https://i.postimg.cc/brQkqDwZ/loteria-wylaczona.png';
+
+            // Reset przycisku po chwili, aby można było zagrać ponownie
+            setTimeout(() => {
+                lotteryButton.classList.remove('disabled');
+            }, 1000);
         }, 600);
     }
 });
